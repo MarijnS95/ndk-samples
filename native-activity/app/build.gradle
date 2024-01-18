@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         applicationId = 'com.example.native_activity'
-        minSdkVersion 14
+        minSdkVersion 29
         targetSdkVersion 33
         externalNativeBuild {
             cmake {
@@ -33,6 +33,8 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'androidx.appcompat:appcompat:1.5.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+//    Pure native apps don't use this, and fail to launch with:
+//    java.lang.RuntimeException: Unable to get provider androidx.startup.InitializationProvider: java.lang.ClassNotFoundException: Didn't find class "androidx.startup.InitializationProvider" on path: DexPathList[[],nativeLibraryDirectories=[/data/app/~~MNkLc8jmwToa-HT3irg1Ww==/com.example.native_activity-z6yy_WR3Z5Fjt7ZkgL_eIA==/lib/arm64, /data/app/~~MNkLc8jmwToa-HT3irg1Ww==/com.example.native_activity-z6yy_WR3Z5Fjt7ZkgL_eIA==/base.apk!/lib/arm64-v8a, /system/lib64, /system_ext/lib64]]
+//    implementation 'androidx.appcompat:appcompat:1.5.1'
+//    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 }
