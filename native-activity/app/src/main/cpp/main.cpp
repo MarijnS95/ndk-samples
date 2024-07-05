@@ -23,6 +23,7 @@
 #include <android/sensor.h>
 #include <android/set_abort_message.h>
 #include <android_native_app_glue.h>
+#include <android/surface_control.h>
 #include <jni.h>
 
 #include <cassert>
@@ -94,7 +95,7 @@ struct Engine {
   void CreateSensorListener(ALooper_callbackFunc callback) {
     CHECK_NOT_NULL(app);
 
-    sensorManager = ASensorManager_getInstance();
+    sensorManager = ASensorManager_getInstanceForPackage("blah");
     if (sensorManager == nullptr) {
       return;
     }
@@ -124,7 +125,7 @@ struct Engine {
   bool running_;
 
   void ScheduleNextTick() {
-    AChoreographer_postFrameCallback(AChoreographer_getInstance(), Tick, this);
+    AChoreographer_postFrameCallback64(AChoreographer_getInstance(), Tick, this);
   }
 
   /// Entry point for Choreographer.
@@ -138,7 +139,7 @@ struct Engine {
   /// the value with the upper bits from CLOCK_MONOTONIC.
   ///
   /// \param data The Engine being ticked.
-  static void Tick(long, void* data) {
+  static void Tick(int64_t, void* data) {
     CHECK_NOT_NULL(data);
     auto engine = reinterpret_cast<Engine*>(data);
     engine->DoTick();
@@ -331,6 +332,8 @@ static void engine_handle_cmd(android_app* app, int32_t cmd) {
     case APP_CMD_INIT_WINDOW:
       // The window is being shown, get it ready.
       if (engine->app->window != nullptr) {
+        ASurfaceControl *control = ASurfaceControl_createFromWindow(engine->app->window, "nativewindow");
+        LOGI("CMD_INIT_WINDOW SurfaceControl is %p for wnd %p", control, engine->app->window);
         engine_init_display(engine);
       }
       break;
@@ -339,6 +342,10 @@ static void engine_handle_cmd(android_app* app, int32_t cmd) {
       engine_term_display(engine);
       break;
     case APP_CMD_GAINED_FOCUS:
+      {
+        ASurfaceControl *control = ASurfaceControl_createFromWindow(engine->app->window, "nativewindow");
+        LOGI("CMD_GAINED_FOCUS SurfaceControl is %p for wnd %p", control, engine->app->window);
+      }
       // When our app gains focus, we start monitoring the accelerometer.
       if (engine->accelerometerSensor != nullptr) {
         ASensorEventQueue_enableSensor(engine->sensorEventQueue,
@@ -371,8 +378,8 @@ int OnSensorEvent(int /* fd */, int /* events */, void* data) {
   CHECK_NOT_NULL(engine->accelerometerSensor);
   ASensorEvent event;
   while (ASensorEventQueue_getEvents(engine->sensorEventQueue, &event, 1) > 0) {
-    LOGI("accelerometer: x=%f y=%f z=%f", event.acceleration.x,
-         event.acceleration.y, event.acceleration.z);
+//    LOGI("accelerometer: x=%f y=%f z=%f", event.acceleration.x,
+//         event.acceleration.y, event.acceleration.z);
   }
 
   // From the docs:
